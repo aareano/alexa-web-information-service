@@ -1,20 +1,25 @@
-## Alexa Web Information Service (AWIS)
+# Alexa Web Information Service (AWIS)
 
 This repo contains a python wrapper to make signed requests to the Alexa Web
 Information Service (AWIS) API on AWS Marketplace.
 
+#### Table of Contents
+
 <!-- MarkdownTOC autolink="true" -->
 
-- [Getting Started](#getting-started)
-- [URL Information](#url-information)
-- [Historical Web Traffic](#historical-web-traffic)
-- [Sites Linking In](#sites-linking-in)
-- [Browse Category](#browse-category)
-- [License Summary](#license-summary)
+- [Actions](#actions)
+    - [Getting Started](#getting-started)
+    - [URL Information](#url-information)
+    - [Historical Web Traffic](#historical-web-traffic)
+    - [Sites Linking In](#sites-linking-in)
+    - [Browse Category](#browse-category)
 - [Python](#python)
-- [Debugging](#debugging)
+    - [Debugging](#debugging)
+- [License Summary](#license-summary)
 
 <!-- /MarkdownTOC -->
+
+## Actions
 
 ### Getting Started
 
@@ -53,10 +58,6 @@ The `SitesLinkingIn` action returns the sites linking to a specified web site.
 The `CategoryBrowse` and `ListingsBrowse` actions return the top sites within
 a category.
 
-## License Summary
-
-This sample code is made available under the MIT license.
-
 ## Python
 
 Tested with Python v3.7.2 and Python v2.7.14
@@ -94,3 +95,7 @@ is Copyright © 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Except where otherwise noted, all examples in this collection are licensed
 under the MIT license. The full license text is provided in the LICENSE file
 accompanying this repository.
+
+## License Summary
+
+This sample code is made available under the MIT license.
