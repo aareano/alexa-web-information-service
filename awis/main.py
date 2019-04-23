@@ -1,18 +1,10 @@
-#
-# Copyright 2019 Amazon.com, Inc. and its affiliates. All Rights Reserved.
-#
 # Licensed under the MIT License. See the LICENSE accompanying this file
 # for the specific language governing permissions and limitations under
 # the License.
 #
-#------------------------------------------------------------------------
-#         Python Code Sample for Alexa Web Information Service          -
-#------------------------------------------------------------------------
-#
-# This sample will make a request to the Alexa Web Information Service in
-# AWS Marketplace using the API user credentials and API plan key. This
-# sample demonstrates how to make a SigV4 signed request and refresh
-# crdentials from the Cognito pool.
+# ------------------------------------------------------------------------
+#          Python wrapper for Alexa Web Information Service API          -
+# ------------------------------------------------------------------------
 #
 
 import sys, os, base64, hashlib, hmac
@@ -22,9 +14,11 @@ import getpass
 from botocore.vendored import requests
 from datetime import datetime
 import time
-from configparser import ConfigParser # pip install configparser
+from configparser import ConfigParser  # pip install configparser
 from future.standard_library import install_aliases
+
 install_aliases()
+
 from urllib.parse import parse_qs, quote_plus
 
 # ************* REQUEST VALUES *************
@@ -33,7 +27,7 @@ endpoint = 'https://' + host
 region = 'us-east-1'
 method = 'GET'
 service = 'execute-api'
-log = logging.getLogger( "awis" )
+log = logging.getLogger("awis")
 content_type = 'application/xml'
 local_tz = "America/Los_Angeles"
 
@@ -46,11 +40,14 @@ cognito_client_id = '6clvd0v40jggbaa5qid2h6hkqf'
 cognito_identity_pool_id = 'us-east-1:bff024bb-06d0-4b04-9e5d-eb34ed07f884'
 cognito_region = 'us-east-1'
 
+
 ###############################################################################
 # usage                                                                       #
 ###############################################################################
-def usage( ):
-    sys.stderr.write ( """
+
+
+def usage():
+    sys.stderr.write("""
 Usage: awis.py [options]
 
   Make a signed request to Alexa Web Information API service
@@ -63,14 +60,17 @@ Usage: awis.py [options]
      -?, --help       Print this help message and exit.
 
   Examples:
-     UrlInfo:		awis.py -k 98hu7.... -u User --action urlInfo --options "&ResponseGroup=Rank&Url=sfgate.com"
-     CategoryBrowse:	awis.py -k 98hu7.... -u User --action CategoryBrowse --options "&Descriptions=True&Path=Top%2FArts%2FVideo&ResponseGroup=Categories"
-""" )
+     UrlInfo:       awis.py -k 98hu7.... -u User --action urlInfo --options "&ResponseGroup=Rank&Url=sfgate.com"
+     CategoryBrowse:    awis.py -k 98hu7.... -u User --action CategoryBrowse --options "&Descriptions=True&Path=Top%2FArts%2FVideo&ResponseGroup=Categories"
+""")
+
 
 ###############################################################################
 # parse_options                                                               #
 ###############################################################################
-def parse_options( argv ):
+
+
+def parse_options(argv):
     """Parse command line options."""
 
     opts = {}
@@ -78,23 +78,24 @@ def parse_options( argv ):
     urlargs = {}
 
     try:
-        user_opts, user_args = getopt.getopt( \
-            argv, \
-            'k:u:o:a:t:?', \
-            [ 'key=', 'user=', 'options=', 'action=', 'help=' ] )
+        user_opts, user_args = getopt.getopt(
+            argv,
+            'k:u:o:a:t:?',
+            ['key=', 'user=', 'options=', 'action=', 'help=']
+        )
     except Exception as e:
         print('Command parse error:', e)
-        log.error( "Unable to parse command line" )
+        log.error("Unable to parse command line")
         return None
 
-    if ( '-?', '' ) in user_opts or ( '--help', '' ) in user_opts:
+    if ('-?', '') in user_opts or ('--help', '') in user_opts:
         opts['help'] = True
         return opts
     #
     # Convert command line options to dictionary elements
     #
     for opt in user_opts:
-        if  opt[0] == '-k' or opt[0] == '--key':
+        if opt[0] == '-k' or opt[0] == '--key':
             opts['key'] = opt[1]
         elif opt[0] == '-u' or opt[0] == '--user':
             opts['user'] = opt[1]
@@ -110,7 +111,7 @@ def parse_options( argv ):
     if 'key' not in opts or \
        'user' not in opts or \
        'action' not in opts:
-        log.error( "Missing required arguments" )
+        log.error("Missing required arguments")
         return None
 
     #
@@ -119,9 +120,12 @@ def parse_options( argv ):
     success = True
     return opts
 
+
 ###############################################################################
 # refresh_credentials                                                         #
 ###############################################################################
+
+
 def refresh_credentials(user):
     client_idp = boto3.client('cognito-idp', region_name=cognito_region, aws_access_key_id='', aws_secret_access_key='')
     client_identity = boto3.client('cognito-identity', region_name='us-east-1')
@@ -152,23 +156,28 @@ def refresh_credentials(user):
     )
 
     config = ConfigParser()
-    config['DEFAULT'] = {'aws_access_key_id': response['Credentials']['AccessKeyId'],
-                         'aws_secret_access_key': response['Credentials']['SecretKey'],
-                         'aws_session_token': response['Credentials']['SessionToken'],
-                         'expiration': time.mktime(response['Credentials']['Expiration'].timetuple())
-                        }
+    config['DEFAULT'] = {
+        'aws_access_key_id': response['Credentials']['AccessKeyId'],
+        'aws_secret_access_key': response['Credentials']['SecretKey'],
+        'aws_session_token': response['Credentials']['SessionToken'],
+        'expiration': time.mktime(response['Credentials']['Expiration'].timetuple())
+    }
 
     print('Writing new credentials to %s\n' % credentials_file)
     with open(credentials_file, 'w') as configfile:
         config.write(configfile)
     configfile.close()
 
+
 ###############################################################################
 # Key derivation functions. See:
 # http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-python
 ###############################################################################
+
+
 def sign(key, msg):
     return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
+
 
 def getSignatureKey(key, dateStamp, regionName, serviceName):
     kDate = sign(('AWS4' + key).encode('utf-8'), dateStamp)
@@ -177,39 +186,46 @@ def getSignatureKey(key, dateStamp, regionName, serviceName):
     kSigning = sign(kService, 'aws4_request')
     return kSigning
 
+
 ###############################################################################
 # sortQueryString                                                             #
 ###############################################################################
+
+
 def sortQueryString(queryString):
     queryTuples = parse_qs(queryString)
     sortedQueryString = ""
-    sep=""
+    sep = ""
     for key in sorted(queryTuples.keys()):
         sortedQueryString = sortedQueryString + sep + key + "=" + quote_plus(queryTuples[key][0])
-        sep="&"
+        sep = "&"
     return sortedQueryString
+
 
 ###############################################################################
 # main                                                                        #
 ###############################################################################
+
+
 if __name__ == "__main__":
 
-    opts = parse_options( sys.argv[1:] )
+    opts = parse_options(sys.argv[1:])
 
     if not opts:
-        usage( )
-        sys.exit( -1 )
+        usage()
+        sys.exit(-1)
 
     if 'help' in opts:
-        usage( )
-        sys.exit( 0 )
+        usage()
+        sys.exit(0)
 
     user = opts['user']
 
     if not os.path.isfile(credentials_file):
         refresh_credentials(user)
 
-    # Get credentials to access api from local file. Refresh credentials from Cognito pool if necessary
+    # Get credentials to access api from local file. Refresh credentials from
+    # Cognito pool if necessary
     while True:
         config = ConfigParser()
         config.read(credentials_file)
@@ -230,7 +246,7 @@ if __name__ == "__main__":
     # Create a date for headers and the credential string
     t = datetime.utcnow()
     amzdate = t.strftime('%Y%m%dT%H%M%SZ')
-    datestamp = t.strftime('%Y%m%d') # Date w/o time, used in credential scope
+    datestamp = t.strftime('%Y%m%d')  # Date w/o time, used in credential scope
 
     # ************* TASK 1: CREATE A CANONICAL REQUEST *************
     # http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
@@ -241,9 +257,10 @@ if __name__ == "__main__":
     # string (use '/' if no path)
     canonical_uri = '/api'
 
-    # Step 3: Create the canonical query string. In this example (a GET request),
-    # request parameters are in the query string. Query string values must
-    # be URL-encoded (space=%20). The parameters must be sorted by name.
+    # Step 3: Create the canonical query string. In this example (a GET
+    # request), request parameters are in the query string. Query string
+    # values must be URL-encoded (space=%20). The parameters must be sorted
+    # by name.
     canonical_querystring = 'Action=' + opts['action']
     if 'options' in opts:
         canonical_querystring += "&" +  opts[ 'options']
@@ -266,7 +283,10 @@ if __name__ == "__main__":
     payload_hash = hashlib.sha256(('').encode('utf-8')).hexdigest()
 
     # Step 7: Combine elements to create canonical request
-    canonical_request = method + '\n' + canonical_uri + '\n' + canonical_querystring + '\n' + canonical_headers + '\n' + signed_headers + '\n' + payload_hash
+    canonical_request = (
+        method + '\n' + canonical_uri + '\n' + canonical_querystring + '\n' +
+        canonical_headers + '\n' + signed_headers + '\n' + payload_hash
+    )
 
     # ************* TASK 2: CREATE THE STRING TO SIGN*************
     # Match the algorithm to the hashing algorithm you use, either SHA-1 or
@@ -288,19 +308,21 @@ if __name__ == "__main__":
     # Create authorization header and add to request headers
     authorization_header = algorithm + ' ' + 'Credential=' + access_key + '/' + credential_scope + ', ' +  'SignedHeaders=' + signed_headers + ', ' + 'Signature=' + signature
 
-    # The request can include any headers, but MUST include "host", "x-amz-date",
-    # and (for this scenario) "Authorization". "host" and "x-amz-date" must
-    # be included in the canonical_headers and signed_headers, as noted
-    # earlier. Order here is not significant.
-    # Python note: The 'host' header is added automatically by the Python 'requests' library.
-    #headers = {'x-amz-date':amzdate, 'Authorization':authorization_header}
-    headers = {'Accept':'application/xml',
-               'Content-Type': content_type,
-               'X-Amz-Date':amzdate,
-               'Authorization': authorization_header,
-               'x-amz-security-token': session_token,
-               'x-api-key': opts['key']
-              }
+    # The request can include any headers, but MUST include "host",
+    # "x-amz-date", and (for this scenario) "Authorization". "host" and
+    # "x-amz-date" must be included in the canonical_headers and
+    # signed_headers, as noted earlier. Order here is not significant. Python
+    # note: The 'host' header is added automatically by the Python 'requests'
+    # library.
+    # headers = {'x-amz-date':amzdate, 'Authorization':authorization_header}
+    headers = {
+        'Accept': 'application/xml',
+        'Content-Type': content_type,
+        'X-Amz-Date': amzdate,
+        'Authorization': authorization_header,
+        'x-amz-security-token': session_token,
+        'x-api-key': opts['key']
+    }
 
     # ************* SEND THE REQUEST *************
     request_url = endpoint + canonical_uri + "?" + canonical_querystring

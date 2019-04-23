@@ -1,3 +1,7 @@
+**`repo status: work in progress`**
+
+---
+
 # Alexa Web Information Service (AWIS)
 
 This repo contains a python wrapper to make signed requests to the Alexa Web
